@@ -18,7 +18,7 @@ function App() {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 
-  // Add retry logic and CORS error handling for network failures
+  // Add retry logic and detailed CORS error handling
   apiClient.interceptors.response.use(
     response => response,
     async error => {
@@ -29,7 +29,10 @@ function App() {
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
         return apiClient(config);
       }
-      setError(`Network error: ${error.message} (Status: ${error.response?.status || 'Unknown'})`);
+      const errorMessage = error.response?.status === 500
+        ? `Server error (CORS or backend issue): ${error.message} (Status: 500)`
+        : `Network error: ${error.message} (Status: ${error.response?.status || 'Unknown'})`;
+      setError(errorMessage);
       return Promise.reject(error);
     }
   );
